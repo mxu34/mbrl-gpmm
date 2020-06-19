@@ -1,0 +1,234 @@
+gym_config:
+    render: False
+    task_dynamics_list: [0, 1, 2, 3]
+    subtask_episode: 3           # the number of episode for each subtask
+    task_episode: 3            # the number of the task episode
+    seed: 1000                   # seed for all environments
+    dynamics_name: [             # name of all environments
+        'CartPoleSwingUpEnvCm05Pm04Pl05-v0',
+        'CartPoleSwingUpEnvCm05Pm04Pl07-v0',
+        'CartPoleSwingUpEnvCm05Pm08Pl05-v0',
+        'CartPoleSwingUpEnvCm05Pm08Pl07-v0',
+    ]
+
+
+# MPC controller configuration
+mpc_config:
+    optimizer: "Random"             # Random or CEM, # random may need to fix bugs
+    Random: # TODO: warning may contain not finished modification
+        env: 'swingup'           # 'stable'
+        horizon: 20               # how long of the horizon to predict
+        popsize: 500            # how many random samples for mpc
+        particle: 1
+        gamma: 1              # reward discount coefficient
+        action_low: [-1]           # lower bound of the solution space
+        action_high: [1]           # upper bound of the solution space
+        action_dim: 1
+        particle: 1
+        max_iters: 20
+        num_elites: 50
+        epsilon: 0.001
+        alpha: 0.1
+        init_mean: 0
+        init_var: 1
+        action_cost: True
+        x_dot_cost: False
+    CEM:
+        env: 'swingup'
+        horizon: 20                # how long of the horizon to predict
+        popsize: 200               # how many random samples for mpc
+        particle: 1                # number of particles to enlarge
+        gamma: 1                   # reward discount coefficient
+        action_low: [-1]           # lower bound of the solution space
+        action_high: [1]           # upper bound of the solution space
+        action_dim: 1
+        max_iters: 5
+        num_elites: 20
+        epsilon: 0.001
+        alpha: 0.1
+        init_mean: 0
+        init_var: 1
+        action_cost: True
+        x_dot_cost: False
+
+
+# Model parameters
+DPGP_config:
+    alpha: 0.1                   # alpha initialization parameter, cartpole_stable: 0.5, cartpole_swingup: 0.5
+    ada_alpha: False             # adaptively update alpha
+    state_dim: 5                 # dimension of the state space
+    action_dim: 1                # dimension of the action space
+    lr: 0.1                      # learning rate of the gaussian process
+    gp_iter: 10                  # iteration time of GP
+    merge: True                  # use merge strategy in sequential_vi or not
+    merge_threshold: 20.0        # merge a component when the kld is below this value
+    merge_burnin: 15             # the sample number to start merge
+    model_type: 'sample'         # choose the model type [exact/sparse/sample]
+    max_inducing_point: 1300     # Used in [sparse/sample]. the data number after do a sparse operation
+    trigger_induce: 1500         # Used in [sparse/sample]. when n is larger than this value, do a sparse operation
+    sample_number: 100           # Used in [sample]. number of MC samples to find the highest lower bound
+    window_prob: 0.001           # the initial transition bias to other cluster
+    self_prob: 1.0               # the initial self-transition bias
+    param: [                     # GP initilize and constraint parameters
+        0.001,    # noise_covar initilize
+        0.0001,   # noise_covar constraint
+        0.0,      # constant initilize
+        0.5,      # outputscale initilize
+        1.0,      # lengthscale initilize
+    ]
+
+
+SingleGP_config:
+    state_dim: 5                 # dimension of the state space
+    action_dim: 1                # dimension of the action space    
+    lr: 0.1                      # learning rate of the gaussian process
+    gp_iter: 3                   # iteration time of GP
+    max_inducing_point: 1300     # the data number after do a sparse operation
+    trigger_induce: 1500         # when n is larger than this value, do a sparse operation
+    sample_number: 100           # number of MC samples to find the highest lower bound
+    param: [                     # GP initilize and constraint parameters
+        0.001,    # noise_covar initilize
+        0.0001,   # noise_covar constraint
+        0.0,      # constant initilize
+        0.5,      # outputscale initilize
+        1.0,      # lengthscale initilize
+    ]
+
+
+
+SingleSparseGP_config:
+    state_dim: 5                 # dimension of the state space
+    action_dim: 1                # dimension of the action space    
+    lr: 0.1                      # learning rate of the gaussian process
+    gp_iter: 3                   # iteration time of GP
+    max_inducing_point: 500     # the data number after do a sparse operation
+    param: [                     # GP initilize and constraint parameters
+        0.0001,    # noise_covar initilize
+        0.00001,   # noise_covar constraint
+        0.0,      # constant initilize
+        0.4,      # outputscale initilize
+        1.0,      # lengthscale initilize
+    ]
+
+
+NP_config:
+    model_config:
+        load_model: False           # If set true, you must specify the model path, otherwise train a new model
+        model_path: "./baselines/storage/example.ckpt" # the path to load the model
+        state_dim: 5                # environment states
+        action_dim: 1               # how many controls we need
+        output_dim: 5               # output dim
+        likelihood_method: 'gp'     # 'gp' like method or 'nn'
+        likelihood_value: 'loss'    # negative 'loss' for likelihood 'll'
+        strategy: 'nn'              # Methods used for training and predicting other choices 'pure'
+        context_number: 100         # must be smaller than episode
+        target_number: 25            # The smaller the better?
+        sequential: False           # permute the data while training
+        virtual_batch: False        # To be updated
+        np_hidden_list: [256, 128, 64]
+        np_latent_dim: 64
+
+
+    training_config:
+        n_epochs: 200            # how many epoches to train the dynamic model
+        learning_rate: 0.0005     # learning rate
+        batch_size: 1024
+        save_model_flag: False
+        save_model_path: "np_save_test.ckpt" # the path to save the model
+        validation_flag: False
+        validation_freq: 100      # the frequency of validation
+        validation_ratio: 0.1    # ratio of validation set
+
+
+NN_config:
+    model_config:
+        load_model: False        # If set true, you must specify the model path, otherwise train a new model
+        save_model_flag: False
+        save_model_path: "./baselines/storage/exp_1.ckpt" # the path to save the model
+        state_dim: 5             # environment states
+        action_dim: 1            # how many controls we need
+        output_dim: 5            # output dim
+        hidden_dim: 2            # hidden layer number
+        hidden_size: 256         # hidden layer size
+    
+    training_config:
+        n_epochs: 200            # how many epoches to train the dynamic model
+        learning_rate: 0.0005     # learning rate
+        batch_size: 512
+        validation_flag: True
+        validation_freq: 10      # the frequency of validation
+        validation_ratio: 0.2    # ratio of validation set
+        exp_number: 1            # experiment number
+    
+    dataset_config:
+        load_flag: False 
+        load_path: "./baselines/storage/data_exp_1.pkl"     
+        n_max_steps: 1000        # maximum steps per episode
+        n_random_episodes: 800   # how many random episodes' data to fit the initial dynamic model
+        testset_split: 0.2       # testset's portion in the random dataset, the rest portion is the training set
+        n_mpc_episodes: 4        # how many episodes data sampled with the MPC controller
+        mpc_dataset_split: 0.5   # mpc dataset's portion in the training set
+        min_train_samples: 6000
+        n_mpc_itrs: 100          # the number to perform reinforce iteration
+        save_flag: False         # set True if you want to save all the dataset
+        save_path: "./baselines/storage/data_exp_1.pkl"
+
+grbal_config:
+    # Training
+    valid_split_ratio: 0.1
+    rolling_average_persitency: 0.99
+    obs_space_dims: 5
+    action_space_dims: 1
+    max_path_length: 200          # length of each subtask of each iteration
+    n_itr: 30                     # iterations for meta model training
+
+    # Dynamics Model
+    meta_batch_size: 10
+    adapt_batch_size: 16
+    hidden_nonlinearity_model: 'relu'
+    learning_rate: 0.001
+    inner_learning_rate: 0.001
+    hidden_sizes_model: [128, 128]
+    dynamics_model_max_epochs: 100
+    normalize_input: False
+
+maml_config:
+    state_dim: 5
+    action_dim: 1
+    adapt_iter: 10
+    alpha: 0.01
+    adapt_lr: 0.001
+    meta_lr: 0.001
+    meta_epoch: 200
+    meta_batch_size: 1 # one gradient descent
+    hidden_size: 500
+
+DPNN_config:
+    DP_config:
+        DPprior: True # False
+        stm_length: 50               # short-term memory length. Start to train when it is full
+        alpha: 0.1 #1.1                  # alpha initialization parameter, cartpole_stable: 0.5, cartpole_swingup: 0.5
+        ada_alpha: False             # adaptively update alpha
+        merge: True                  # use merge strategy in sequential_vi or not
+        merge_threshold: 20.0        # merge a component when the kld is below this value
+        merge_burnin: 15             # the sample number to start merge
+        window_prob: 0.001           # the initial transition bias to other cluster
+        self_prob: 1.0               # the initial self-transition bias
+    
+    NN_config:
+        model_config:
+            save_model_path: "./baselines/dpnn/models/meta_cartpole.ckpt" # the path to load the model
+            pretrain: True
+            state_dim: 5             # environment states
+            action_dim: 1            # how many controls we need
+            output_dim: 5            # output dim
+            hidden_dim: 2            # hidden layer number
+            hidden_size: 256         # hidden layer size
+
+        training_config:
+            n_epochs: 100            # how many epoches to train the dynamic model
+            learning_rate: 0.0005     # learning rate
+            batch_size: 64
+            validation_flag: True
+            validation_freq: 100      # the frequency of validation
+            validation_ratio: 0.1    # ratio of validation set

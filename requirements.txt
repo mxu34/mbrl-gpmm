@@ -1,0 +1,8 @@
+torch==1.4.0
+gpytorch==1.0.1
+gym==0.17.1
+mujoco_py==2.0.2.9
+matplotlib
+numpy
+scipy
+loguru
