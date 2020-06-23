@@ -1,6 +1,8 @@
 
 ## Task-Agnostic Online Reinforcement Learning with an Infinite Mixture of Gaussian Processes
 
+Paper available at: https://arxiv.org/pdf/2006.11441.pdf
+
 ### Python3 requirements
 
 ```
